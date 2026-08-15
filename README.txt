@@ -1,0 +1,1 @@
+Place dashboard screenshots and terminal log images in this folder.
