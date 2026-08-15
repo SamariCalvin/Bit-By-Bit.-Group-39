@@ -1,5 +1,6 @@
+import os
 import dash
-from dash import dcc, html, dash_table
+from dash import dcc, html
 from dash.dependencies import Input, Output
 import plotly.graph_objs as go
 import paho.mqtt.client as mqtt
@@ -24,7 +25,7 @@ def on_message(client, userdata, msg):
         light_vals.append(payload.get("light", 0))
         dist_vals.append(payload.get("distance", 0))
     except Exception as e:
-        print("Error:", e)
+        print("Error processing payload:", e)
 
 client = mqtt.Client()
 client.on_message = on_message
@@ -33,9 +34,10 @@ client.subscribe("lab/telemetry")
 client.loop_start()
 
 app = dash.Dash(__name__)
+server = app.server  # EXPOSE FLASK SERVER FOR GUNICORN
 
 app.layout = html.Div(style={"backgroundColor": "#1e1e1e", "color": "#ffffff", "padding": "20px"}, children=[
-    html.H1("Advanced IoT Telemetry Dashboard (Dark Theme)", style={"textAlign": "center"}),
+    html.H1("Advanced IoT Telemetry Dashboard", style={"textAlign": "center"}),
     dcc.Interval(id="graph-update", interval=2000, n_intervals=0),
     dcc.Graph(id="live-graph"),
 ])
@@ -60,4 +62,5 @@ def update_graph(n):
     return fig
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    port = int(os.environ.get("PORT", 8050))
+    app.run_server(host="0.0.0.0", port=port, debug=False)
